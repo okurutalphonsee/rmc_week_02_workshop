@@ -1,8 +1,14 @@
+
 # Communicable, Maternal, Neonatal, and Nutritional Disease Burden (CMNN)
 
 ```{r}
 # Load necessary packages
-pacman::p_load(tidyverse, knitr, here)
+pacman::p_load(tidyverse, 
+               knitr, 
+               here,
+               dplyr,
+               janitor,
+               plotly)
 
 # Import the communicable diseases data
 data_cmnn <- read_csv(here("data", "burden-of-disease-cmnn.csv"))
@@ -11,19 +17,52 @@ data_cmnn <- read_csv(here("data", "burden-of-disease-cmnn.csv"))
 ## Table of Estimates for CMNN Burden Over Time
 
 ```{r}
-# Here render a table for the DALY burden over time for the three countries 
+# Here render a table for the DALY burden over time for the three countries
+#clean row names and then filter the countries
+data_cmnn_orig_eafrica <- 
+data_cmnn %>% 
+   clean_names() %>% 
+    filter(entity %in% c("Uganda","Kenya","Tanzania")) %>% 
+    dplyr::rename(cmnn_srate = 
+             dal_ys_disability_adjusted_life_years_communicable_maternal_neonatal_and_nutritional_diseases_sex_both_age_age_standardized_rate,
+             country= entity)
 # You should pivot the data to show each country in a separate column.
+data_cmnn_orig_eafrica_wide <- 
+data_cmnn_orig_eafrica %>% 
+select(!code) %>% 
+pivot_wider(values_from = cmnn_srate,
+            names_from = country
+)
+data_cmnn_orig_eafrica_wide
+
 # Use kable() from the knitr package to render the table.
+tab_rendered <- 
+knitr::kable(data_cmnn_orig_eafrica_wide)
+tab_rendered
 ```
 
 ## Plot Showing Trends in CMNN Burden Over Time
 
 ```{r}
 # Here, plot a line graph showing the trend of DALY burden for the chosen countries over time. You can use ggplot2 to create this plot. Each country's line should be a different color.
+ggplot_cmnn <- 
+ggplot(data =data_cmnn_orig_eafrica,
+       mapping =  aes(x= year,
+                      y = cmnn_srate ,
+                      color = country))+
+geom_line()
+ggplotly(ggplot_cmnn)
 ```
 
 ## Summary of CMNN Burden Findings
 
 Provide a brief analysis based on the data presented in the table and chart. Highlight any significant findings or patterns. About 3 sentences.
 
+DALYs for a disease or health condition are the sum of the years of life lost to due to premature mortality (YLLs) and the years lived with a disability (YLDs) due to prevalent cases of the disease or health condition in a population
+
+-   According to the plot above, Uganda had slightly more years lost due to premature mortality due to  the Communicable, Maternal, Neonatal, and Nutritional Disease Burden (CMNN) compared to its Kenyan and Tanzania counterparts in the East African Community
+
+-   Additionaly life years lost have decreased over the years from 1990 to 2020
+
+-   The data also shows that there was a notable disparity in the sum of years lost due to CMNN upto about 2005 among the three countries but with all countries registering steady decreases in the same and there being not notable variations for the next 15 years
 
